@@ -19,15 +19,17 @@ package Logger is
    procedure Log(Message: ASU.Unbounded_String; Level: Log_Level);   
    procedure Finalize(Log: in out Log_Record);
    
+   procedure Init;
+   procedure Stop;
+   
 private 
    -- Message to be stored in log
    type Log_Message is new ASU.Unbounded_String;
-   type Log_Message_Ptr is access all Log_Message;
    
    type Log_Record is new Ada.Finalization.Controlled with Record
       Timestamp:    Ada.Calendar.Time;
       Level:        Log_Level;
-      Message:      Log_Message_Ptr;
+      Message:      Log_Message;
    end record;
    -- protected log queue object
    package Log_Record_Ptr_I 
@@ -36,4 +38,12 @@ private
    package Log_Record_Queue 
    is new Ada.Containers.Unbounded_Synchronized_Queues(Log_Record_Ptr_I);
    Log_Queue : Log_Record_Queue.Queue;
+   -- task that writes log messages from queue to file
+   task Log_Writer is
+      entry Setup;
+      entry Start;
+      entry Stop;
+   end Log_Writer;
+   
+   
 end Logger;
